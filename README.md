@@ -5,6 +5,10 @@ Demo RAG application for high compliance industry to showcase Mindria integratio
 
 Build a locally runnable, Dockerized RAG (Retrieval-Augmented Generation) application that lets users query the latest 10-K, 10-Q, 8-K SEC filings for a given company. The user provides their OpenAI API key, and the app returns a trustworthy, source-attributed answer.
 
+## To Run
+1. `make up`
+-- clean up using `make down`
+
 ## Learnings
 
 1. TO WRITE
