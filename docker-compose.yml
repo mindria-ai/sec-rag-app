@@ -1,10 +1,15 @@
 version: '3.9'
+
 services:
   sec-rag-app:
-    build: .
+    build:
+      context: .
+    container_name: sec-rag-app
     ports:
       - "8501:8501"
     env_file:
       - .env
+    working_dir: /app
     volumes:
-      - ./:/app  # Enables live code changes (if not freezing the image)
+      - ./app:/app                         # Live-reload app source code
+      - ./chroma_store:/app/chroma_store  # Persist ChromaDB vector store

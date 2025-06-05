@@ -1,0 +1,22 @@
+# Core
+openai
+chromadb
+python-dotenv
+
+# Parsing
+unstructured
+pdfminer.six
+beautifulsoup4
+
+# UI
+streamlit
+
+# Optional for LangChain
+langchain
+tiktoken
+
+# Optional for LlamaIndex
+llama-index
+
+# SEC Downloader
+sec-edgar-downloader

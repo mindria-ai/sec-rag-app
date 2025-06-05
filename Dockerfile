@@ -27,4 +27,4 @@ ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_SERVER_PORT=8501
 
 # Default command: run Streamlit app
-CMD ["streamlit", "run", "main.py"]
+CMD ["streamlit", "run", "main.py", "--server.runOnSave", "true", "--server.headless", "true", "--server.port", "8501"]

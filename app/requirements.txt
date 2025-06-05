@@ -1,8 +1,0 @@
-openai
-sec-edgar-downloader
-unstructured
-chromadb
-python-dotenv
-streamlit
-langchain
-tqdm

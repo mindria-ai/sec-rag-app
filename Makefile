@@ -7,7 +7,7 @@ build:
 	docker build -t $(APP_NAME) .
 
 run:
-	docker run --env-file .env -p $(PORT):$(PORT) $(APP_NAME)
+	docker run --env-file .env -p $(PORT):8501 $(APP_NAME)
 
 up:
 	docker-compose up --build

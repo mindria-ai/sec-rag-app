@@ -21,16 +21,20 @@ sec-rag-app/
 │   ├── main.py                   # Streamlit UI (chooses between manual/langchain)
 │   ├── config.py                 # Global constants, env loading
 │
-│   ├── pipeline_manual/          # Manual RAG logic
-│   │   ├── embedder.py
-│   │   ├── retriever.py
-│   │   └── qa.py
-│
-│   ├── pipeline_langchain/       # LangChain-specific pipeline
-│   │   ├── chain.py              # LangChain RetrievalQAChain setup
-│   │   ├── callbacks.py          # Optional Mindria or logging hooks
-│   │   └── utils.py
-│
+|   ├── pipeline/
+|   |   ├── manual/               # Manual RAG logic
+│   │   |   ├── embedder.py
+│   │   |   ├── retriever.py
+│   │   |   └── qa.py
+|   |   |
+|   |   ├── langchain/            # LangChain-specific pipeline
+│   │   |   ├── chain.py          # LangChain RetrievalQAChain setup
+│   │   |   ├── callbacks.py      # Optional Mindria or logging hooks
+│   │   |   └── utils.py
+|   |   |
+|   |   ├── llama_index/          # LlamaIndex-specific pipeline
+|   |   |   └── TODO
+|   |
 │   ├── core/                     # Shared logic between both pipelines
 │   │   ├── sec_fetcher.py        # Download 10-K/10-Q/8-K
 │   │   ├── parser.py             # Clean + chunk with Unstructured
