@@ -19,4 +19,4 @@ tiktoken
 llama-index
 
 # SEC Downloader
-sec-edgar-downloader
+sec-edgar-api
