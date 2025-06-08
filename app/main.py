@@ -1,5 +1,6 @@
 import streamlit as st
 from core.sec_fetcher import fetch_latest_filing
+from core.parser import parse_sec_htm_file
 from pipeline.manual.qa import answer_question as manual_answer
 from pipeline.langchain.chain import answer_question as langchain_answer
 import os
@@ -87,6 +88,11 @@ with main_col:
                 try:
                     doc_info = fetch_latest_filing(ipo_ticker, form)
                     doc_path = doc_info["main_doc_path"]
+
+                    chunks = parse_sec_htm_file(doc_path)
+
+                    print("number of chunks", len(chunks))
+
                     if rag_mode == "Manual":
                         answer = manual_answer(doc_path, "What are the major risks, financials, and use of proceeds?", params=params)
                     else:
