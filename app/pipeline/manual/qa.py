@@ -1,9 +1,8 @@
 import json
 
 def answer_question(doc_path: str, question: str, params: dict):
-  print(f'doc_path: {doc_path} | question: {question} | params: {json.dumps(params, indent=2)}')
+  return f'doc_path: {doc_path} | question: {question} | params: {json.dumps(params, indent=2)}'
 
-  return
 #     from pipeline.manual.embedder import embed_document
 #     from pipeline.manual.retriever import retrieve_top_k
 #     from openai import OpenAI
