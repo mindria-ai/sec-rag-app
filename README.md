@@ -1,9 +1,9 @@
 # sec-rag-app
-Demo RAG application for high compliance industry to showcase Mindria integrations
+Demo RAG application in high compliance industry to showcase Mindria integrations
 
 ## Goal
 
-Build a locally runnable, Dockerized RAG (Retrieval-Augmented Generation) application that lets users query the latest 10-K, 10-Q, 8-K SEC filings for a given company. The user provides their OpenAI API key, and the app returns a trustworthy, source-attributed answer.
+Build a locally runnable, Dockerized RAG (Retrieval-Augmented Generation) application that lets users query the latest S-1, S-1/A, Prospectus SEC filings for a given company to evaluate Pre-IPO value. The user provides their OpenAI API key, and the app returns a trustworthy, source-attributed answer.
 
 ## DEMO
 
@@ -40,7 +40,7 @@ sec-rag-app/
 |   |   |   └── TODO
 |   |
 │   ├── core/                     # Shared logic between both pipelines
-│   │   ├── sec_fetcher.py        # Download 10-K/10-Q/8-K
+│   │   ├── sec_fetcher.py        # Download S-1, S-1/A, 424B4 (Prospectus)
 │   │   ├── parser.py             # Clean + chunk with Unstructured
 │   │   ├── vectorstore.py        # Chroma init and metadata mgmt
 │   │   └── file_cache.py         # Local document caching

@@ -1,90 +1,92 @@
 import os
-import json
-import requests
+import logging
 from pathlib import Path
-from sec_edgar_api import EdgarClient
+from typing import Tuple, Dict
 
+import requests
+from edgar import *
+
+# Configure logging
+typ_logger = logging.getLogger(__name__)
+typ_logger.setLevel(logging.INFO)
+
+# Directory for downloads
 DOWNLOAD_DIR = os.getenv("SEC_DOWNLOAD_DIR", "downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-client = EdgarClient(user_agent="PersonalProject psshin.code@gmail.com")
+# Set EDGAR user-agent
+set_identity("psshin.code@gmail.com")
 
-def get_cik_and_ticker(identifier: str) -> tuple[str, str]:
+
+def get_cik_and_ticker(identifier: str) -> Tuple[str, str]:
     """Accepts a CIK or ticker. Returns (CIK, TICKER_SYMBOL)."""
     if identifier.isdigit():
         return identifier.zfill(10), f"CIK{identifier}"
 
     url = "https://www.sec.gov/files/company_tickers.json"
     headers = {"User-Agent": "psshin.code@gmail.com"}
-    r = requests.get(url, headers=headers)
-    if r.status_code != 200:
-        raise RuntimeError("Failed to fetch SEC ticker-to-CIK mapping")
-
-    data = r.json()
+    resp = requests.get(url, headers=headers)
+    resp.raise_for_status()
+    data = resp.json()
     for entry in data.values():
-        if entry["ticker"].lower() == identifier.lower():
+        if entry.get("ticker", "").lower() == identifier.lower():
             return str(entry["cik_str"]).zfill(10), entry["ticker"].upper()
-
     raise ValueError(f"CIK not found for identifier: {identifier}")
 
-def fetch_latest_filing(identifier: str, form_type: str) -> dict:
-    """Fetch and save S-1, S-1/A, or 424B4 filings with normalized naming."""
+
+def fetch_latest_filing(identifier: str, form_type: str) -> Dict[str, str]:
+    """
+    Fetch and save S-1, S-1/A, or 424B4 filings in plain-text (.txt).
+    Uses client.get_submissions for metadata and requests for content.
+    """
     try:
         cik, ticker_symbol = get_cik_and_ticker(identifier)
+        # Instantiate edgartools Company by CIK
+        company = Company(identifier)
 
-        submission_data = client.get_submissions(cik)
-        recent_filings = submission_data["filings"]["recent"]
+        # Filter for form type and get latest
+        filings = company.get_filings(form=form_type)
+        filing = filings.latest()
+        if not filing:
+            raise RuntimeError(f"No filing {form_type} found for {identifier}")
 
-        forms = recent_filings["form"]
-        accession_numbers = recent_filings["accessionNumber"]
-        primary_docs = recent_filings["primaryDocument"]
-        filing_dates = recent_filings["filingDate"]
+        # Extract clean text
+        raw_html = filing.html()
+        file_url = filing.document.url
 
-        for i, form in enumerate(forms):
-            if form.strip().upper() == form_type.upper():
-                acc_num_raw = accession_numbers[i]
-                acc_num = acc_num_raw.replace("-", "")
-                doc_name = primary_docs[i]
-                filing_date = filing_dates[i]
+        # Prepare output directory
+        output_dir = Path(DOWNLOAD_DIR) / ticker_symbol
+        output_dir.mkdir(parents=True, exist_ok=True)
 
-                file_url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc_num}/{doc_name}"
-                headers = {"User-Agent": "psshin.code@gmail.com"}
-                response = requests.get(file_url, headers=headers)
-                if response.status_code != 200:
-                    raise RuntimeError(f"Failed to download filing from {file_url}")
+        # Normalize filename (always .htm)
+        date = filing.filing_date
+        form_upper = form_type.upper()
+        if form_upper == "S-1":
+            filename = "s-1.htm"
+        elif form_upper == "S-1/A":
+            filename = f"s-1-a-{date}.htm"
+        elif form_upper == "424B4":
+            existing = list(output_dir.glob("final-prospectus*.htm"))
+            if existing:
+                filename = f"final-prospectus-{date}.htm"
+            else:
+                filename = "final-prospectus.htm"
+        else:
+            # fallback naming
+            filename = f"{form_type.lower()}-{date}.htm"
 
-                # Directory: always <ticker>/S-1/
-                output_dir = Path(DOWNLOAD_DIR) / ticker_symbol
-                output_dir.mkdir(parents=True, exist_ok=True)
+        file_path = output_dir / filename
+        file_path.write_text(raw_html, encoding="utf-8")
 
-                # Normalized filename logic
-                if form_type.upper() == "S-1":
-                    filename = "s-1.htm"
-                elif form_type.upper() == "S-1/A":
-                    filename = f"s-1-a-{filing_date}.htm"
-                elif form_type.upper() == "424B4":
-                    existing = list(output_dir.glob("final-prospectus*.htm"))
-                    if existing:
-                        filename = f"final-prospectus-{filing_date}.htm"
-                    else:
-                        filename = "final-prospectus.htm"
-                else:
-                    filename = f"{form_type.lower()}-{filing_date}.htm"
-
-                file_path = output_dir / filename
-
-                with open(file_path, "wb") as f:
-                    f.write(response.content)
-
-                return {
-                    "main_doc_path": str(file_path),
-                    "form_type": form_type,
-                    "filing_dir": str(output_dir),
-                    "filing_url": file_url,
-                    "filing_date": filing_date,
-                }
+        typ_logger.info(f"Saved {form_type} to {file_path}")
+        return {
+            "main_doc_path": str(file_path),
+            "form_type": form_type,
+            "filing_dir": str(output_dir),
+            "filing_url": file_url,
+            "filing_date": date,
+        }
 
         raise RuntimeError(f"No recent filing of type {form_type} found for {identifier}")
-
     except Exception as e:
-        raise RuntimeError(f"Failed to fetch {form_type} for {identifier}: {str(e)}")
+        raise RuntimeError(f"Failed to fetch {form_type} for {identifier}: {e}")

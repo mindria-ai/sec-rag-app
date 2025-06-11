@@ -21,3 +21,4 @@ llama-index
 # SEC
 sec-edgar-api
 sec-parser
+edgartools

@@ -3,7 +3,7 @@ from core.sec_fetcher import fetch_latest_filing
 from core.parser import parse_sec_htm_file
 from pipeline.manual.qa import answer_question as manual_answer
 from pipeline.langchain.chain import answer_question as langchain_answer
-import os
+import json
 
 st.set_page_config(page_title="SEC RAG App", layout="wide")
 st.title("🗞 Pre-IPO RAG Evaluator")
@@ -91,7 +91,8 @@ with main_col:
 
                     chunks = parse_sec_htm_file(doc_path)
 
-                    print("number of chunks", len(chunks))
+                    for chunk in chunks[:5]:
+                      print(json.dumps(chunk, indent=2))
 
                     if rag_mode == "Manual":
                         answer = manual_answer(doc_path, "What are the major risks, financials, and use of proceeds?", params=params)
