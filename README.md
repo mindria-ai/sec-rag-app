@@ -27,23 +27,33 @@ sec-rag-app/
 │
 |   ├── pipeline/
 |   |   ├── manual/               # Manual RAG logic
-│   │   |   ├── embedder.py
-│   │   |   ├── retriever.py
-│   │   |   └── qa.py
+│   │   |   ├── loader.py         # Manual loading
+│   │   |   ├── chunker.py        # Manual chunking - unstructured.io
+│   │   |   ├── embedder.py       # Embedding
+│   │   |   ├── vectorstore.py    # Vector store handling
+│   │   |   ├── retriever.py      # Retriever logic
+│   │   |   └── qa.py             # Manual QA logic
 |   |   |
 |   |   ├── langchain/            # LangChain-specific pipeline
-│   │   |   ├── chain.py          # LangChain RetrievalQAChain setup
-│   │   |   ├── callbacks.py      # Optional Mindria or logging hooks
-│   │   |   └── utils.py
+│   │   |   ├── loader.py         # LangChain loader wrapper
+│   │   |   ├── chunker.py        # LangChain text splitter
+│   │   |   ├── embedder.py       # LangChain embeddings
+│   │   |   ├── vectorstore.py    # LangChain vector store
+│   │   |   ├── retriever.py      # RetrievalQAChain setup
+│   │   |   └── qa.py             # LangChain QA abstraction
 |   |   |
 |   |   ├── llama_index/          # LlamaIndex-specific pipeline
-|   |   |   └── TODO
+│   │   |   ├── loader.py         # LlamaIndex Document creation
+│   │   |   ├── chunker.py        # NodeParser logic
+│   │   |   ├── embedder.py       # LlamaIndex embedding
+│   │   |   ├── vectorstore.py    # VectorStoreIndex
+│   │   |   ├── retriever.py      # RetrieverQueryEngine
+│   │   |   ├── qa.py             # LlamaIndex QA handling
 |   |
 │   ├── core/                     # Shared logic between both pipelines
 │   │   ├── sec_fetcher.py        # Download S-1, S-1/A, 424B4 (Prospectus)
-│   │   ├── parser.py             # Clean + chunk with Unstructured
-│   │   ├── vectorstore.py        # Chroma init and metadata mgmt
-│   │   └── file_cache.py         # Local document caching
+│   │   ├── parser.py             # Clean\
+│   │   └── utils.py              # Shared
 │
 │   ├── requirements.txt
 ├── chroma_store/                 # Local persisted vector DB
