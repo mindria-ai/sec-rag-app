@@ -1,7 +1,7 @@
 import streamlit as st
 from core.sec_fetcher import fetch_latest_filing
-from core.parser import parse_sec_doc
-from pipeline.manual.qa import get_ipo_recommendation
+from core.parser import parse_sec_doc # Keep this import if parse_sec_doc is used elsewhere in main.py, otherwise remove
+from pipeline.manual.qa import get_ipo_recommendation, get_combined_ipo_recommendation
 # from pipeline.langchain.chain import answer_question as langchain_answer
 import json
 
@@ -82,37 +82,39 @@ with main_col:
     if st.button("Generate Pre-IPO Summary") and ipo_ticker:
         with st.spinner("Gathering S-1, S-1/A, and Prospectus..."):
             form_types = ["S-1", "S-1/A", "424B4"]
-            answers = []
+            doc_paths = [] # Collect all doc_paths here
 
             for form in form_types:
                 try:
                     doc_info = fetch_latest_filing(ipo_ticker, form)
-                    doc_path = doc_info["main_doc_path"]
-
-                    chunks = parse_sec_doc(doc_path)
-
-                    for chunk in chunks[:5]:
-                      print(json.dumps(chunk, indent=2))
-
-                    if rag_mode == "Manual":
-                        recommendation = get_ipo_recommendation(doc_path)
-                        answer = f"""**Recommendation Score (1-10):** {recommendation['score']}
-
-                        **Summary:**
-                        {recommendation['summary']}
-
-                        **Source:** {recommendation['citations']}
-                        """
-                    # else:
-                    #     answer = langchain_answer(doc_path, "What are the major risks, financials, and use of proceeds?", params=params)
-                    answers.append(f"**{form}**:\n\n{answer}")
-
+                    doc_paths.append(doc_info["main_doc_path"])
                 except Exception as e:
-                    answers.append(f"**{form}**: Error - {e}")
+                    st.error(f"Error fetching {form} for {ipo_ticker}: {e}")
+                    # Continue to next form even if one fails
 
-            st.success("Pre-IPO Summary")
-            for ans in answers:
-                st.markdown(ans)
+            if doc_paths:
+                st.success("Documents fetched. Analyzing and generating summary...")
+                # Call the new combined function and stream the output
+                full_response = ""
+                response_container = st.empty() # Placeholder for streamed output
+
+                for chunk in get_combined_ipo_recommendation(doc_paths, model=model):
+                    full_response += chunk
+                    response_container.markdown(full_response)
+                
+                # After streaming, parse the JSON and display score/citations
+                try:
+                    recommendation = json.loads(full_response)
+                    st.markdown(f"**Recommendation Score (1-10):** {recommendation.get('score', 'N/A')}")
+                    st.markdown(f"**Summary:** {recommendation.get('summary', 'N/A')}")
+                    st.markdown(f"**Citations:**")
+                    for citation in recommendation.get('citations', []):
+                        st.markdown(f"- {citation}")
+                except json.JSONDecodeError:
+                    st.error("Failed to parse final recommendation JSON from streamed output.")
+                    st.markdown(f"Raw output: {full_response}")
+            else:
+                st.warning("No documents were successfully fetched for analysis.")
 
 # --- Right column for cost tracking ---
 with cost_col:

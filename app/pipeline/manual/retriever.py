@@ -1,7 +1,12 @@
-from .vectorstore import query_vectorstore
-from .embedder import embed_chunks
+from core.vectorstore import VectorStore
+from core.embedder import Embedder
 
-def retrieve_chunks(query: str, n_results: int = 5) -> list[dict]:
-    query_embedding = embed_chunks([{"text": query}])
-    results = query_vectorstore(query_embedding[0]["embedding"], n_results=n_results)
-    return results
+class Retriever:
+    def __init__(self, vector_store: VectorStore, embedder: Embedder):
+        self.vector_store = vector_store
+        self.embedder = embedder
+
+    def retrieve_chunks(self, query: str, n_results: int = 5) -> list[dict]:
+        query_embedding = self.embedder.embed_chunks([{"text": query}])
+        results = self.vector_store.query_collection(query_embedding[0]["embedding"], n_results=n_results)
+        return results
