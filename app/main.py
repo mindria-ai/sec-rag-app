@@ -1,8 +1,8 @@
 import streamlit as st
 from core.sec_fetcher import fetch_latest_filing
-from core.parser import parse_sec_htm_file
-from pipeline.manual.qa import answer_question as manual_answer
-from pipeline.langchain.chain import answer_question as langchain_answer
+from core.parser import parse_sec_doc
+from pipeline.manual.qa import get_ipo_recommendation
+# from pipeline.langchain.chain import answer_question as langchain_answer
 import json
 
 st.set_page_config(page_title="SEC RAG App", layout="wide")
@@ -89,15 +89,22 @@ with main_col:
                     doc_info = fetch_latest_filing(ipo_ticker, form)
                     doc_path = doc_info["main_doc_path"]
 
-                    chunks = parse_sec_htm_file(doc_path)
+                    chunks = parse_sec_doc(doc_path)
 
                     for chunk in chunks[:5]:
                       print(json.dumps(chunk, indent=2))
 
                     if rag_mode == "Manual":
-                        answer = manual_answer(doc_path, "What are the major risks, financials, and use of proceeds?", params=params)
-                    else:
-                        answer = langchain_answer(doc_path, "What are the major risks, financials, and use of proceeds?", params=params)
+                        recommendation = get_ipo_recommendation(doc_path)
+                        answer = f"""**Recommendation Score (1-10):** {recommendation['score']}
+
+                        **Summary:**
+                        {recommendation['summary']}
+
+                        **Source:** {recommendation['citations']}
+                        """
+                    # else:
+                    #     answer = langchain_answer(doc_path, "What are the major risks, financials, and use of proceeds?", params=params)
                     answers.append(f"**{form}**:\n\n{answer}")
 
                 except Exception as e:
